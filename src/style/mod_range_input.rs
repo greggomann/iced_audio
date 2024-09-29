@@ -2,7 +2,7 @@
 //!
 //! [`ModRangeInput`]: ../../native/mod_range_input/struct.ModRangeInput.html
 
-use iced_native::Color;
+use iced_core::Color;
 
 use crate::style::default_colors;
 

@@ -1,6 +1,6 @@
 //! Structs for constructing a group of tick marks.
 
-use iced_native::{Point, Rectangle};
+use iced_core::{Point, Rectangle};
 use std::cell::RefCell;
 use std::sync::Arc;
 

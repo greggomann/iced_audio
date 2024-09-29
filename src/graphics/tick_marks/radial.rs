@@ -1,6 +1,7 @@
-use iced_graphics::widget::canvas::{self, Fill, Frame, LineCap, Path, Stroke};
+use iced_widget::{Fill, Frame, LineCap, Path, Stroke};
+use iced_core::renderer::Style;
 use iced_graphics::Primitive;
-use iced_native::{Color, Point, Size, Vector};
+use iced_core::{Color, Point, Size, Vector};
 
 use super::PrimitiveCache;
 use crate::core::Normal;
@@ -32,7 +33,7 @@ fn draw_radial_circles(
                 frame.fill(
                     &path,
                     Fill {
-                        style: canvas::Style::Solid(color),
+                        style: Style::Solid(color),
                         ..Fill::default()
                     },
                 );
@@ -50,7 +51,7 @@ fn draw_radial_circles(
                 frame.fill(
                     &path,
                     Fill {
-                        style: canvas::Style::Solid(color),
+                        style: Style::Solid(color),
                         ..Fill::default()
                     },
                 );
@@ -89,7 +90,7 @@ fn draw_radial_lines(
                     &path,
                     Stroke {
                         width,
-                        style: canvas::Style::Solid(color),
+                        style: Style::Solid(color),
                         line_cap: LineCap::Butt,
                         ..Stroke::default()
                     },
@@ -109,7 +110,7 @@ fn draw_radial_lines(
                     &path,
                     Stroke {
                         width,
-                        style: canvas::Style::Solid(color),
+                        style: Style::Solid(color),
                         line_cap: LineCap::Butt,
                         ..Stroke::default()
                     },
