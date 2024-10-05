@@ -10,7 +10,7 @@ use iced_native::{
     Length, Point, Rectangle, Shell, Size, Widget,
 };
 
-use crate::core::{ModulationRange, Normal, NormalParam};
+use crate::core::{ModulationRange, Normal, NormalParam, renderer};
 use crate::native::{text_marks, tick_marks, SliderStatus};
 use crate::style::h_slider::StyleSheet;
 
@@ -26,10 +26,10 @@ static DEFAULT_MODIFIER_SCALAR: f32 = 0.02;
 /// [`NormalParam`]: ../../core/normal_param/struct.Param.html
 /// [`HSlider`]: struct.HSlider.html
 #[allow(missing_debug_implementations)]
-pub struct HSlider<'a, Message, Renderer>
+pub struct HSlider<'a, Message, Theme, Renderer>
 where
     Renderer: self::Renderer,
-    Renderer::Theme: StyleSheet,
+    Theme: Catalog,
 {
     normal_param: NormalParam,
     on_change: Box<dyn 'a + Fn(Normal) -> Message>,
@@ -46,12 +46,13 @@ where
     text_marks: Option<&'a text_marks::Group>,
     mod_range_1: Option<&'a ModulationRange>,
     mod_range_2: Option<&'a ModulationRange>,
+    class: Theme::Class<'a>,
 }
 
-impl<'a, Message, Renderer> HSlider<'a, Message, Renderer>
+impl<'a, Message, Theme, Renderer> HSlider<'a, Message, Theme, Renderer>
 where
     Renderer: self::Renderer,
-    Renderer::Theme: StyleSheet,
+    Theme: Catalog,
 {
     /// Creates a new [`HSlider`].
     ///
@@ -315,8 +316,8 @@ impl State {
     }
 }
 
-impl<'a, Message, Renderer> Widget<Message, Renderer>
-    for HSlider<'a, Message, Renderer>
+impl<'a, Message, Theme, Renderer> Widget<Message, Theme, Renderer>
+    for HSlider<'a, Message, Theme, Renderer>
 where
     Renderer: self::Renderer,
     Renderer::Theme: StyleSheet,
@@ -604,16 +605,58 @@ where
     );
 }
 
-impl<'a, Message, Renderer> From<HSlider<'a, Message, Renderer>>
-    for Element<'a, Message, Renderer>
+impl<'a, Message, Theme, Renderer> From<HSlider<'a, Message, Theme, Renderer>>
+    for Element<'a, Message, Theme, Renderer>
 where
     Message: 'a,
     Renderer: 'a + self::Renderer,
     Renderer::Theme: 'a + StyleSheet,
 {
     fn from(
-        h_slider: HSlider<'a, Message, Renderer>,
-    ) -> Element<'a, Message, Renderer> {
+        h_slider: HSlider<'a, Message, Theme, Renderer>,
+    ) -> Element<'a, Message, Theme, Renderer> {
         Element::new(h_slider)
+    }
+}
+
+/// The style of a slider.
+#[derive(Debug, Clone, Copy)]
+pub struct Style {
+    /// The [`Background`] of the slider.
+    pub background: Background,
+    /// The icon [`Color`] of the slider.
+    pub icon_color: Color,
+    /// The [`Border`] of hte slider.
+    pub border: Border,
+    /// The text [`Color`] of the slider.
+    pub text_color: Option<Color>,
+}
+
+/// The theme catalog of a [`slider`].
+pub trait Catalog: Sized {
+    /// The item class of the [`Catalog`].
+    type Class<'a>;
+
+    /// The default class produced by the [`Catalog`].
+    fn default<'a>() -> Self::Class<'a>;
+
+    /// The [`Style`] of a class with the given status.
+    fn style(&self, class: &Self::Class<'_>, status: Status) -> Style;
+}
+
+/// A styling function for a [`slider`].
+///
+/// This is just a boxed closure: `Fn(&Theme, Status) -> Style`.
+pub type StyleFn<'a, Theme> = Box<dyn Fn(&Theme, Status) -> Style + 'a>;
+
+impl Catalog for Theme {
+    type Class<'a> = StyleFn<'a, Self>;
+
+    fn default<'a>() -> Self::Class<'a> {
+        Box::new(primary)
+    }
+
+    fn style(&self, class: &Self::Class<'_>, status: Status) -> Style {
+        class(self, status)
     }
 }
