@@ -5,8 +5,8 @@
 use crate::core::{ModulationRange, Normal};
 use crate::graphics::{text_marks, tick_marks};
 use crate::native::h_slider;
-use iced_graphics::Primitive;
-use iced_native::{Background, Color, Point, Rectangle};
+use iced_core::Primitive;
+use iced_core::{Background, Color, Point, Rectangle};
 
 pub use crate::style::h_slider::{
     Appearance, ClassicAppearance, ClassicHandle, ClassicRail,
@@ -33,11 +33,9 @@ struct ValueMarkers<'a> {
 /// [`Param`]: ../../core/param/trait.Param.html
 /// [`HSlider`]: struct.HSlider.html
 pub type HSlider<'a, Message, Theme> =
-    h_slider::HSlider<'a, Message, crate::Renderer<Theme>>;
+    h_slider::HSlider<'a, Message, Theme, crate::Renderer>;
 
-impl<Theme> h_slider::Renderer for crate::Renderer<Theme>
-where
-    Self::Theme: StyleSheet,
+impl h_slider::Renderer for crate::Renderer
 {
     fn draw(
         &mut self,
@@ -50,7 +48,7 @@ where
         tick_marks: Option<&tick_marks::Group>,
         text_marks: Option<&text_marks::Group>,
         style_sheet: &dyn StyleSheet<
-            Style = <Self::Theme as StyleSheet>::Style,
+            Style = Theme::Style,
         >,
         style: &<Self::Theme as StyleSheet>::Style,
         tick_marks_cache: &tick_marks::PrimitiveCache,

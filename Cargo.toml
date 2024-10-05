@@ -28,11 +28,12 @@ glow = ["iced_glow"]
 wgpu = ["iced_wgpu"]
 
 [dependencies]
-iced_core = "0.9"
+iced_core = "0.13.2"
 iced_glow = { version = "0.8", optional = true }
-iced_graphics = { version = "0.8", features = ["canvas"] }
-iced_native = "0.10"
-iced_wgpu = { version = "0.10", optional = true }
+iced_graphics = "0.13.0"
+iced_runtime = "0.13.2"
+iced_wgpu = { version = "0.13.5", optional = true }
+iced_widget = "0.13.2"
 
 [dev-dependencies]
 iced = "0.9"

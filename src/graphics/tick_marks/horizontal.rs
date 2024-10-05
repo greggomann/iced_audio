@@ -4,11 +4,13 @@ use super::PrimitiveCache;
 use crate::core::Normal;
 use crate::native::tick_marks;
 use crate::style::tick_marks::{Appearance, Placement, Shape};
-use iced_graphics::{Background, Color, Primitive, Rectangle};
+use iced_core::{Background, Color, Rectangle};
+use iced_core::renderer::Quad;
+use iced_core::border::Border;
 
 #[allow(clippy::too_many_arguments)]
 fn draw_horizontal_lines(
-    primitives: &mut Vec<Primitive>,
+    primitives: &mut Vec<Quad>,
     tick_marks: &[Normal],
     bounds_x: f32,
     bounds_width: f32,
@@ -23,32 +25,36 @@ fn draw_horizontal_lines(
 
     if inverse {
         for tick_mark in tick_marks {
-            primitives.push(Primitive::Quad {
+            primitives.push(Quad {
                 bounds: Rectangle {
                     x: (start_x + tick_mark.scale_inv(bounds_width)),
                     y,
                     width,
                     height: length,
                 },
-                background: back_color,
-                border_radius: [0.0; 4],
-                border_width: 0.0,
-                border_color: Color::TRANSPARENT,
+                shadow: back_color,
+                border: Border{
+                    radius: [0.0; 4],
+                    width: 0.0,
+                    color: Color::TRANSPARENT,
+                }
             });
         }
     } else {
         for tick_mark in tick_marks {
-            primitives.push(Primitive::Quad {
+            primitives.push(Quad {
                 bounds: Rectangle {
                     x: (start_x + tick_mark.scale(bounds_width)),
                     y,
                     width,
                     height: length,
                 },
-                background: back_color,
-                border_radius: [0.0; 4],
-                border_width: 0.0,
-                border_color: Color::TRANSPARENT,
+                shadow: back_color,
+                border: Border{
+                    radius: [0.0; 4],
+                    width: 0.0,
+                    color: Color::TRANSPARENT,
+                }
             });
         }
     }

@@ -4,13 +4,14 @@
 
 use std::fmt::Debug;
 
-use iced_native::widget::tree::{self, Tree};
-use iced_native::{
+use iced_core::widget::tree::{self, Tree};
+use iced_core::{
     event, keyboard, layout, mouse, touch, Clipboard, Element, Event, Layout,
-    Length, Point, Rectangle, Shell, Size, Widget,
+    Length, Point, Rectangle, Shell, Size, Theme, Widget,
 };
+use iced_widget::renderer;
 
-use crate::core::{ModulationRange, Normal, NormalParam, renderer};
+use crate::core::{ModulationRange, Normal, NormalParam};
 use crate::native::{text_marks, tick_marks, SliderStatus};
 use crate::style::h_slider::StyleSheet;
 
@@ -41,7 +42,7 @@ where
     modifier_keys: keyboard::Modifiers,
     width: Length,
     height: Length,
-    style: <Renderer::Theme as StyleSheet>::Style,
+    style: Style,
     tick_marks: Option<&'a tick_marks::Group>,
     text_marks: Option<&'a text_marks::Group>,
     mod_range_1: Option<&'a ModulationRange>,
@@ -82,6 +83,7 @@ where
             text_marks: None,
             mod_range_1: None,
             mod_range_2: None,
+            class: Theme::Class::default(),
         }
     }
 
@@ -138,7 +140,7 @@ where
     /// [`HSlider`]: struct.HSlider.html
     pub fn style(
         mut self,
-        style: impl Into<<Renderer::Theme as StyleSheet>::Style>,
+        style: impl Into<<Theme as StyleSheet>::Style>,
     ) -> Self {
         self.style = style.into();
         self
@@ -320,7 +322,7 @@ impl<'a, Message, Theme, Renderer> Widget<Message, Theme, Renderer>
     for HSlider<'a, Message, Theme, Renderer>
 where
     Renderer: self::Renderer,
-    Renderer::Theme: StyleSheet,
+    Theme: StyleSheet,
 {
     fn tag(&self) -> tree::Tag {
         tree::Tag::of::<State>()
@@ -330,12 +332,8 @@ where
         tree::State::new(State::new(self.normal_param.value))
     }
 
-    fn width(&self) -> Length {
-        Length::Shrink
-    }
-
-    fn height(&self) -> Length {
-        self.height
+    fn size(&self) -> Size {
+        Size::new(Length::Shrink, self.height)
     }
 
     fn layout(
@@ -411,10 +409,10 @@ where
 
                 if layout.bounds().contains(cursor_position) {
                     let lines = match delta {
-                        iced_native::mouse::ScrollDelta::Lines {
+                        iced_core::mouse::ScrollDelta::Lines {
                             y, ..
                         } => y,
-                        iced_native::mouse::ScrollDelta::Pixels {
+                        iced_core::mouse::ScrollDelta::Pixels {
                             y, ..
                         } => {
                             if y > 0.0 {
@@ -538,10 +536,10 @@ where
         &self,
         state: &Tree,
         renderer: &mut Renderer,
-        theme: &Renderer::Theme,
-        _style: &iced_native::renderer::Style,
+        theme: &Theme,
+        _style: &StyleSheet,
         layout: Layout<'_>,
-        cursor_position: Point,
+        cursor_position: mouse::Cursor,
         _viewport: &Rectangle,
     ) {
         let state = state.state.downcast_ref::<State>();
@@ -568,10 +566,7 @@ where
 /// able to use an [`HSlider`] in your user interface.
 ///
 /// [`HSlider`]: struct.HSlider.html
-pub trait Renderer: iced_native::Renderer
-where
-    Self::Theme: StyleSheet,
-{
+pub trait Renderer: iced_core::Renderer {
     /// Draws an [`HSlider`].
     ///
     /// It receives:
@@ -589,7 +584,7 @@ where
     fn draw(
         &mut self,
         bounds: Rectangle,
-        cursor_position: Point,
+        cursor_position: mouse::Cursor,
         normal: Normal,
         dragging_status: bool,
         mod_range_1: Option<&ModulationRange>,
@@ -597,9 +592,9 @@ where
         tick_marks: Option<&tick_marks::Group>,
         text_marks: Option<&text_marks::Group>,
         style_sheet: &dyn StyleSheet<
-            Style = <Self::Theme as StyleSheet>::Style,
+            Style = <Theme as StyleSheet>::Style,
         >,
-        style: &<Self::Theme as StyleSheet>::Style,
+        style: &<Theme as StyleSheet>::Style,
         tick_marks_cache: &crate::tick_marks::PrimitiveCache,
         text_marks_cache: &crate::text_marks::PrimitiveCache,
     );
@@ -610,53 +605,11 @@ impl<'a, Message, Theme, Renderer> From<HSlider<'a, Message, Theme, Renderer>>
 where
     Message: 'a,
     Renderer: 'a + self::Renderer,
-    Renderer::Theme: 'a + StyleSheet,
+    Theme: 'a + StyleSheet,
 {
     fn from(
         h_slider: HSlider<'a, Message, Theme, Renderer>,
     ) -> Element<'a, Message, Theme, Renderer> {
         Element::new(h_slider)
-    }
-}
-
-/// The style of a slider.
-#[derive(Debug, Clone, Copy)]
-pub struct Style {
-    /// The [`Background`] of the slider.
-    pub background: Background,
-    /// The icon [`Color`] of the slider.
-    pub icon_color: Color,
-    /// The [`Border`] of hte slider.
-    pub border: Border,
-    /// The text [`Color`] of the slider.
-    pub text_color: Option<Color>,
-}
-
-/// The theme catalog of a [`slider`].
-pub trait Catalog: Sized {
-    /// The item class of the [`Catalog`].
-    type Class<'a>;
-
-    /// The default class produced by the [`Catalog`].
-    fn default<'a>() -> Self::Class<'a>;
-
-    /// The [`Style`] of a class with the given status.
-    fn style(&self, class: &Self::Class<'_>, status: Status) -> Style;
-}
-
-/// A styling function for a [`slider`].
-///
-/// This is just a boxed closure: `Fn(&Theme, Status) -> Style`.
-pub type StyleFn<'a, Theme> = Box<dyn Fn(&Theme, Status) -> Style + 'a>;
-
-impl Catalog for Theme {
-    type Class<'a> = StyleFn<'a, Self>;
-
-    fn default<'a>() -> Self::Class<'a> {
-        Box::new(primary)
-    }
-
-    fn style(&self, class: &Self::Class<'_>, status: Status) -> Style {
-        class(self, status)
     }
 }
